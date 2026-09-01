@@ -29,4 +29,6 @@ module.exports = {
   evmRpcUrl: process.env.EVM_RPC_URL || '',
   evmWsUrl: process.env.EVM_WS_URL || '',
   evmPoolAddresses,
+  apiRateLimitWindowMs: Number(process.env.API_RATE_LIMIT_WINDOW_MS || 60000),
+  apiRateLimitMax: Number(process.env.API_RATE_LIMIT_MAX || 120),
 };

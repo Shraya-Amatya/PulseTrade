@@ -2,6 +2,7 @@ const http = require('node:http');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const config = require('./config');
 const pool = require('./db/pool');
 const { createPortfolioRouter } = require('./api/portfolioRoutes');
@@ -14,6 +15,14 @@ const app = express();
 app.use(helmet());
 app.use(cors({ origin: config.clientOrigin }));
 app.use(express.json());
+app.set('trust proxy', 1);
+app.use('/api', rateLimit({
+  windowMs: config.apiRateLimitWindowMs,
+  limit: config.apiRateLimitMax,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: { error: 'Too many requests. Please try again shortly.' },
+}));
 
 app.get('/api/health', (_request, response) => {
   response.json({ status: 'ok' });
@@ -35,6 +44,15 @@ const tradesRouter = createTradesRouter({ database: pool, tradingEngine });
 app.use('/api/portfolio', portfolioRouter);
 app.use('/api/trades', tradesRouter);
 app.use('/api/trade', tradesRouter);
+
+app.use((error, request, response, _next) => {
+  console.error('Unhandled request error:', {
+    method: request.method,
+    path: request.path,
+    message: error.message,
+  });
+  response.status(500).json({ error: 'Internal server error' });
+});
 
 server.listen(config.port, () => {
   console.log(`PulseTrade server listening on http://localhost:${config.port}`);

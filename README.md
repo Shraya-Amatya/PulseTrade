@@ -31,6 +31,7 @@ The project currently includes:
 - Testnet Uniswap v3 execution path with direct-pool discovery, on-chain quotes, allowance gating, gas simulation, swap submission, receipt states, explorer links, and local transaction history
 - Direct route comparison across Uniswap v3 0.05%, 0.30%, and 1.00% fee tiers with best-output selection
 - Express/WebSocket blockchain event bridge with normalized Sepolia block and Uniswap pool-swap events
+- Production hardening with Helmet, exact-origin CORS, API rate limiting, WebSocket origin checks, heartbeat cleanup, and structured error logging
 
 The current trading engine supports simulated market orders through `POST /api/trades`.
 Portfolio valuation is calculated by the server from PostgreSQL positions and the server-owned price cache. If an open position has no fresh price, total value and P/L are shown as unavailable instead of using stale data.
@@ -221,6 +222,8 @@ BINANCE_STREAM_URL
 EVM_RPC_URL
 EVM_WS_URL
 EVM_POOL_ADDRESSES
+API_RATE_LIMIT_WINDOW_MS
+API_RATE_LIMIT_MAX
 ```
 
 Docker Compose also reads `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` from the ignored root `.env` file.
@@ -322,6 +325,7 @@ Railway (PostgreSQL)
 3. Use `npm install` as the install step and `npm start` as the start command.
 4. Configure `DATABASE_URL` from the Railway PostgreSQL service, plus `NODE_ENV=production`, `CLIENT_ORIGIN`, and optional market settings from `server/.env.example`.
 5. Expose the server and verify `/api/health` returns `{ "status": "ok" }`.
+6. Run the database migration as a one-off release command before serving traffic, and enable Railway PostgreSQL backups for production data.
 
 ### Vercel
 
@@ -330,6 +334,8 @@ Railway (PostgreSQL)
 3. Set `VITE_API_URL` to the public Railway HTTPS URL.
 4. Set `VITE_WS_URL` to the public Railway WebSocket URL using `wss://`.
 5. Update Railway's `CLIENT_ORIGIN` to the exact Vercel URL and verify live prices, chart updates, and a simulated trade.
+
+The server enforces API request limits, rejects unexpected WebSocket origins, sends WebSocket heartbeats, and logs unexpected request failures without exposing stack traces to clients. Provider-level TLS, secrets, monitoring, and database backups must still be enabled in Railway/Vercel.
 
 The application is prepared for deployment but is not deployed automatically from this repository. Provider account access, project creation, and production secrets must be supplied by the repository owner.
 
