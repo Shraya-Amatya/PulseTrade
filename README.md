@@ -29,6 +29,7 @@ The project currently includes:
 - Simulation-only USDC → WETH swap quote mechanics: slippage, minimum received, price impact, fee, gas preview, and deadline
 - Transparent USDC/ETH constant-product demo pool with reserves, liquidity, price, fee, and modeled LP share
 - Testnet Uniswap v3 execution path with direct-pool discovery, on-chain quotes, allowance gating, gas simulation, swap submission, receipt states, explorer links, and local transaction history
+- Direct route comparison across Uniswap v3 0.05%, 0.30%, and 1.00% fee tiers with best-output selection
 
 The current trading engine supports simulated market orders through `POST /api/trades`.
 Portfolio valuation is calculated by the server from PostgreSQL positions and the server-owned price cache. If an open position has no fresh price, total value and P/L are shown as unavailable instead of using stale data.

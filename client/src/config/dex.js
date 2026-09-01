@@ -1,4 +1,5 @@
 export const UNISWAP_V3_FEE = 3000
+export const UNISWAP_V3_FEE_TIERS = [500, 3000, 10000]
 
 export const UNISWAP_V3_FACTORY_ABI = [
   {

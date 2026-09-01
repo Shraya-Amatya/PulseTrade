@@ -526,6 +526,45 @@
   }
 }
 
+.route-comparison {
+  display: grid;
+  gap: tokens.$space-2;
+  padding: tokens.$space-4;
+  border: 1px solid tokens.$color-border;
+  border-radius: tokens.$radius-sm;
+  background: tokens.$color-background;
+
+  h3 {
+    margin: 0 0 tokens.$space-1;
+    font-size: 0.875rem;
+  }
+
+  div {
+    display: grid;
+    grid-template-columns: 7rem minmax(0, 1fr) auto;
+    gap: tokens.$space-3;
+    align-items: center;
+    padding-top: tokens.$space-2;
+    border-top: 1px solid tokens.$color-border;
+    font-size: 0.75rem;
+  }
+
+  span,
+  em {
+    color: tokens.$color-muted;
+    font-style: normal;
+  }
+
+  strong {
+    text-align: right;
+  }
+
+  em {
+    min-width: 4.5rem;
+    text-align: right;
+  }
+}
+
 .demo-badge {
   padding: tokens.$space-2 tokens.$space-3;
   border: 1px solid tokens.$color-border;
@@ -908,5 +947,15 @@ table {
   .dex-history div {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .route-comparison div {
+    grid-template-columns: 1fr;
+    gap: tokens.$space-1;
+  }
+
+  .route-comparison strong,
+  .route-comparison em {
+    text-align: left;
   }
 }

@@ -4,6 +4,7 @@ import {
   useConnection,
   useGasPrice,
   useReadContract,
+  useReadContracts,
   useSimulateContract,
   useWaitForTransactionReceipt,
   useWriteContract,
@@ -19,10 +20,12 @@ import {
 import {
   UNISWAP_V3_FACTORY_ABI,
   UNISWAP_V3_FEE,
+  UNISWAP_V3_FEE_TIERS,
   UNISWAP_V3_QUOTER_V2_ABI,
   UNISWAP_V3_ROUTER_ABI,
 } from '../../config/dex.js'
 import { useMarketPrice } from '../../hooks/useMarketPrices.js'
+import { selectBestRoute } from '../../services/routeSelection.js'
 
 const MAX_SLIPPAGE_BPS = 5000
 const QUOTE_DEADLINE_MINUTES = 20
@@ -104,30 +107,51 @@ function DexExecution() {
     }
   }, [transactionHistory])
 
-  const { data: poolAddress, isLoading: isPoolLoading, isError: isPoolError } = useReadContract({
-    address: DEX_CONTRACTS.factory,
-    abi: UNISWAP_V3_FACTORY_ABI,
-    functionName: 'getPool',
-    args: [tokenIn.address || zeroAddress, tokenOut.address || zeroAddress, UNISWAP_V3_FEE],
+  const routeContracts = useMemo(() => [
+    ...UNISWAP_V3_FEE_TIERS.map((fee) => ({
+      address: DEX_CONTRACTS.factory,
+      abi: UNISWAP_V3_FACTORY_ABI,
+      functionName: 'getPool',
+      args: [tokenIn.address || zeroAddress, tokenOut.address || zeroAddress, fee],
+    })),
+    ...UNISWAP_V3_FEE_TIERS.map((fee) => ({
+      address: DEX_CONTRACTS.quoterV2,
+      abi: UNISWAP_V3_QUOTER_V2_ABI,
+      functionName: 'quoteExactInputSingle',
+      args: [{
+        tokenIn: tokenIn.address || zeroAddress,
+        tokenOut: tokenOut.address || zeroAddress,
+        amountIn,
+        fee,
+        sqrtPriceLimitX96: 0n,
+      }],
+    })),
+  ], [amountIn, tokenIn.address, tokenOut.address])
+  const { data: routeData, isLoading: isRouteLoading, isError: isRouteError, error: routeError } = useReadContracts({
+    contracts: routeContracts,
     chainId: TARGET_CHAIN.id,
-    query: { enabled: readEnabled },
+    query: { enabled: Boolean(readEnabled && amountIn > 0n && isValidSlippage) },
   })
-  const hasPool = typeof poolAddress === 'string' && poolAddress !== zeroAddress
-
-  const { data: quoteData, isLoading: isQuoteLoading, isError: isQuoteError, error: quoteError } = useReadContract({
-    address: DEX_CONTRACTS.quoterV2,
-    abi: UNISWAP_V3_QUOTER_V2_ABI,
-    functionName: 'quoteExactInputSingle',
-    args: [{
-      tokenIn: tokenIn.address || zeroAddress,
-      tokenOut: tokenOut.address || zeroAddress,
-      amountIn,
-      fee: UNISWAP_V3_FEE,
-      sqrtPriceLimitX96: 0n,
-    }],
-    chainId: TARGET_CHAIN.id,
-    query: { enabled: Boolean(readEnabled && hasPool && amountIn > 0n && isValidSlippage) },
-  })
+  const routeResults = useMemo(() => UNISWAP_V3_FEE_TIERS.map((fee, index) => {
+    const poolResult = routeData?.[index]
+    const quoteResult = routeData?.[UNISWAP_V3_FEE_TIERS.length + index]
+    const pool = poolResult?.status === 'success' ? poolResult.result : null
+    const quote = quoteResult?.status === 'success' ? quoteResult.result : null
+    return {
+      fee,
+      pool: typeof pool === 'string' && pool !== zeroAddress ? pool : null,
+      amountOut: Array.isArray(quote) && typeof quote[0] === 'bigint' ? quote[0] : null,
+      gasEstimate: Array.isArray(quote) && typeof quote[3] === 'bigint' ? quote[3] : null,
+    }
+  }), [routeData])
+  const bestRoute = selectBestRoute(routeResults)
+  const hasPool = routeResults.some((route) => route.pool)
+  const poolAddress = bestRoute?.pool || routeResults.find((route) => route.pool)?.pool
+  const isPoolLoading = isRouteLoading
+  const isPoolError = isRouteError
+  const isQuoteLoading = isRouteLoading && hasPool
+  const isQuoteError = Boolean(isRouteError || (hasPool && !bestRoute && !isRouteLoading))
+  const quoteError = routeError
 
   const { data: tokenBalance, refetch: refetchBalance } = useReadContract({
     address: tokenIn.address,
@@ -150,7 +174,7 @@ function DexExecution() {
     query: { refetchInterval: 15000 },
   })
 
-  const quoteAmountOut = Array.isArray(quoteData) && typeof quoteData[0] === 'bigint' ? quoteData[0] : null
+  const quoteAmountOut = bestRoute?.amountOut || null
   const amountOutMinimum = quoteAmountOut == null || !isValidSlippage
     ? 0n
     : (quoteAmountOut * BigInt(10000 - Math.round(slippageBps))) / 10000n
@@ -159,16 +183,17 @@ function DexExecution() {
   const allowanceSufficient = typeof allowance === 'bigint' && allowance >= amountIn
   const deadline = (quoteGeneratedAt || currentTime) + QUOTE_DEADLINE_MINUTES * 60 * 1000
   const quoteExpired = Boolean(deadline && currentTime > deadline)
+  const selectedFee = bestRoute?.fee || UNISWAP_V3_FEE
 
-  const swapArgs = useMemo(() => [{
+  const swapArgs = [{
     tokenIn: tokenIn.address || zeroAddress,
     tokenOut: tokenOut.address || zeroAddress,
-    fee: UNISWAP_V3_FEE,
+    fee: selectedFee,
     recipient: address || zeroAddress,
     amountIn,
     amountOutMinimum,
     sqrtPriceLimitX96: 0n,
-  }], [address, amountIn, amountOutMinimum, tokenIn.address, tokenOut.address])
+  }]
   const simulation = useSimulateContract({
     address: DEX_CONTRACTS.swapRouter02,
     abi: UNISWAP_V3_ROUTER_ABI,
@@ -244,7 +269,7 @@ function DexExecution() {
     writeSwap(simulation.data.request)
   }
 
-  const gasEstimate = simulation.data?.request?.gas || (Array.isArray(quoteData) && typeof quoteData[3] === 'bigint' ? quoteData[3] : null)
+  const gasEstimate = simulation.data?.request?.gas || bestRoute?.gasEstimate || null
   const gasCost = typeof gasEstimate === 'bigint' && typeof gasPrice === 'bigint'
     ? Number(formatEther(gasEstimate * gasPrice))
     : null
@@ -255,7 +280,9 @@ function DexExecution() {
     : isPoolError
     ? 'Unable to find the Uniswap v3 pool on Sepolia.'
     : !isPoolLoading && readEnabled && !hasPool
-      ? 'No direct 0.30% Uniswap v3 pool was found for this pair on Sepolia.'
+      ? 'No Uniswap v3 pool was found for this pair on Sepolia.'
+      : !isPoolLoading && hasPool && !bestRoute
+        ? 'The available pools could not return a usable quote for this amount.'
       : isQuoteError
         ? errorMessage(quoteError, 'The on-chain quote could not be calculated.')
         : !isValidSlippage
@@ -286,7 +313,7 @@ function DexExecution() {
     <section className="dashboard-panel dex-execution" aria-labelledby="dex-execution-title">
       <div className="panel-heading">
         <div><p className="panel-heading__eyebrow">Phase 9 · Testnet DEX</p><h2 id="dex-execution-title">Uniswap v3 execution</h2></div>
-        <span className="panel-status">Direct · 0.30%</span>
+        <span className="panel-status">Best direct route</span>
       </div>
 
       <div className="dex-execution__controls">
@@ -301,7 +328,12 @@ function DexExecution() {
         <div><span>Allowance to router</span><strong>{formatAmount(allowance, tokenIn.decimals, tokenIn.symbol)}</strong></div>
       </div>
       <label className="field"><span>Slippage tolerance</span><div className="swap-input swap-input--compact"><input type="text" inputMode="decimal" value={slippageInput} onChange={(event) => { setSlippageInput(event.target.value); setQuoteGeneratedAt(Date.now()) }} aria-label="Swap slippage tolerance percentage" /><strong>%</strong></div></label>
-      <p className="dex-execution__route">Route: {tokenIn.symbol} → {tokenOut.symbol} through the direct Uniswap v3 {UNISWAP_V3_FEE / 10000}% pool. Pool: {isPoolLoading ? 'checking…' : hasPool ? <a href={explorerAddressUrl(poolAddress)} target="_blank" rel="noreferrer">{shorten(poolAddress)} ↗</a> : 'not found'}.</p>
+      <p className="dex-execution__route">Best route: {tokenIn.symbol} → {tokenOut.symbol} through the Uniswap v3 {bestRoute ? bestRoute.fee / 10000 : UNISWAP_V3_FEE / 10000}% pool. Pool: {isPoolLoading ? 'checking…' : poolAddress ? <a href={explorerAddressUrl(poolAddress)} target="_blank" rel="noreferrer">{shorten(poolAddress)} ↗</a> : 'not found'}.</p>
+
+      <div className="route-comparison">
+        <h3>Route comparison</h3>
+        {routeResults.map((route) => <div key={route.fee}><span>{route.fee / 10000}% pool</span><strong>{route.amountOut != null ? formatAmount(route.amountOut, tokenOut.decimals, tokenOut.symbol) : route.pool ? 'Quote unavailable' : 'No pool'}</strong><em>{bestRoute?.fee === route.fee ? 'Best output' : route.pool ? 'Available' : '—'}</em></div>)}
+      </div>
 
       {quoteFailure && <p className="dex-execution__error" role="alert">{quoteFailure}</p>}
       {insufficientBalance && <p className="dex-execution__error" role="alert">Insufficient {tokenIn.symbol} balance for this swap.</p>}
