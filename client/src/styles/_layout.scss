@@ -587,6 +587,54 @@
   }
 }
 
+.blockchain-activity {
+  display: grid;
+  gap: tokens.$space-3;
+
+  .panel-heading {
+    margin-bottom: 0;
+  }
+
+  &__summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: tokens.$space-4;
+
+    div {
+      display: grid;
+      gap: tokens.$space-1;
+    }
+
+    span {
+      color: tokens.$color-muted;
+      font-size: 0.75rem;
+    }
+
+    strong {
+      font-size: 0.875rem;
+    }
+  }
+
+  &__events {
+    display: grid;
+    gap: tokens.$space-2;
+    padding-top: tokens.$space-3;
+    border-top: 1px solid tokens.$color-border;
+
+    div {
+      display: flex;
+      justify-content: space-between;
+      gap: tokens.$space-3;
+      font-size: 0.75rem;
+    }
+
+    a {
+      color: tokens.$color-accent;
+      font-weight: 700;
+    }
+  }
+}
+
 .demo-badge {
   padding: tokens.$space-2 tokens.$space-3;
   border: 1px solid tokens.$color-border;
@@ -979,5 +1027,9 @@ table {
   .route-comparison strong,
   .route-comparison em {
     text-align: left;
+  }
+
+  .blockchain-activity__summary {
+    grid-template-columns: 1fr;
   }
 }

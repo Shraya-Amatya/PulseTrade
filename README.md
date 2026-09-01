@@ -30,6 +30,7 @@ The project currently includes:
 - Transparent USDC/ETH constant-product demo pool with reserves, liquidity, price, fee, and modeled LP share
 - Testnet Uniswap v3 execution path with direct-pool discovery, on-chain quotes, allowance gating, gas simulation, swap submission, receipt states, explorer links, and local transaction history
 - Direct route comparison across Uniswap v3 0.05%, 0.30%, and 1.00% fee tiers with best-output selection
+- Express/WebSocket blockchain event bridge with normalized Sepolia block and Uniswap pool-swap events
 
 The current trading engine supports simulated market orders through `POST /api/trades`.
 Portfolio valuation is calculated by the server from PostgreSQL positions and the server-owned price cache. If an open position has no fresh price, total value and P/L are shown as unavailable instead of using stale data.
@@ -69,6 +70,12 @@ React REST client
 Express API
           ↓
 PostgreSQL
+
+Sepolia RPC/WebSocket
+          ↓ normalized block and swap events
+Express blockchain event bridge
+          ↓ PulseTrade WebSocket
+React blockchain activity store
 ```
 
 The browser never depends on Binance's raw event format. The server converts upstream events into the application contract:
@@ -85,6 +92,30 @@ The browser never depends on Binance's raw event format. The server converts ups
 ```
 
 The React market store keeps updates pair-scoped. The chart receives price events through a focused subscription and batches visual updates every 250ms.
+
+Blockchain events are normalized before they reach the browser. Examples:
+
+```json
+{
+  "type": "block",
+  "network": "sepolia",
+  "blockNumber": "12345678",
+  "observedAt": 1710000000000
+}
+```
+
+```json
+{
+  "type": "chain_swap",
+  "network": "sepolia",
+  "pool": "0x…",
+  "transactionHash": "0x…",
+  "blockNumber": "12345678",
+  "amount0": "-1000000",
+  "amount1": "400000000000000",
+  "observedAt": 1710000000000
+}
+```
 
 Wallet and token data follows a separate on-chain path:
 
@@ -187,6 +218,9 @@ CLIENT_ORIGIN
 MARKET_PAIRS
 WEBSOCKET_PATH
 BINANCE_STREAM_URL
+EVM_RPC_URL
+EVM_WS_URL
+EVM_POOL_ADDRESSES
 ```
 
 Docker Compose also reads `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` from the ignored root `.env` file.
@@ -245,6 +279,7 @@ client/
 server/
   src/
     api/
+    chain/
     db/
     market/
     services/
@@ -262,6 +297,7 @@ MVP_REQUIREMENTS.md
 - USDC and WETH balances/allowances are read from configurable token contracts; approval writes use the configured SwapRouter02 spender by default.
 - No mainnet interaction is implemented.
 - The Phase 8 pool display remains a local educational model; the Phase 9 executable path uses Uniswap v3 testnet contracts.
+- Blockchain activity is live only when the server has `EVM_RPC_URL` or `EVM_WS_URL` and watched addresses in `EVM_POOL_ADDRESSES`; missing configuration is reported as disabled.
 - The chart starts collecting live data when the page connects; it does not load historical candles yet.
 - Ticker percentages represent change during the current browser session, not Binance's 24-hour change.
 - No order book, limit orders, stop-loss orders, multi-hop routing, or mainnet blockchain interaction is included.

@@ -8,6 +8,7 @@ import TokenSystem from '../components/TokenSystem/TokenSystem.jsx'
 import SwapMechanics from '../components/SwapMechanics/SwapMechanics.jsx'
 import LiquidityPool from '../components/LiquidityPool/LiquidityPool.jsx'
 import DexExecution from '../components/DexExecution/DexExecution.jsx'
+import BlockchainActivity from '../components/BlockchainActivity/BlockchainActivity.jsx'
 import useDashboardData from '../hooks/useDashboardData.js'
 
 function Dashboard() {
@@ -28,6 +29,7 @@ function Dashboard() {
       <SwapMechanics />
       <LiquidityPool />
       <DexExecution />
+      <BlockchainActivity />
       <PortfolioSummary portfolio={portfolio} loading={loading} />
       <PositionsTable positions={portfolio?.positions} loading={loading} />
       <TradeHistory trades={trades} loading={loading} />

@@ -39,6 +39,7 @@ app.use('/api/trade', tradesRouter);
 server.listen(config.port, () => {
   console.log(`PulseTrade server listening on http://localhost:${config.port}`);
   console.log(`Market WebSocket available at ws://localhost:${config.port}${config.websocketPath}`);
+  if (config.evmRpcUrl || config.evmWsUrl) console.log('Sepolia blockchain event stream enabled.');
   marketHub.start();
 });
 

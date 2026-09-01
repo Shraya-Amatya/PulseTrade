@@ -5,11 +5,17 @@ const state = {
   events: {},
   openingPrices: {},
   changes: {},
+  chain: {
+    status: 'disabled',
+    latestBlock: null,
+    swaps: [],
+  },
   status: 'connecting',
 }
 
 const priceListeners = new Map()
 const statusListeners = new Set()
+const chainListeners = new Set()
 let socket = null
 let reconnectTimer = null
 let reconnectAttempt = 0
@@ -27,6 +33,10 @@ function notifyStatus() {
   }
 }
 
+function notifyChain() {
+  for (const listener of chainListeners) listener()
+}
+
 function setStatus(status) {
   state.status = status
   notifyStatus()
@@ -34,6 +44,34 @@ function setStatus(status) {
 
 function handleMessage(rawMessage) {
   const message = JSON.parse(rawMessage)
+
+  if (message.type === 'chain_connection') {
+    state.chain = { ...state.chain, status: message.status }
+    notifyChain()
+    return
+  }
+
+  if (message.type === 'chain_error') {
+    state.chain = { ...state.chain, status: 'error' }
+    notifyChain()
+    return
+  }
+
+  if (message.type === 'block') {
+    state.chain = { ...state.chain, status: 'connected', latestBlock: message }
+    notifyChain()
+    return
+  }
+
+  if (message.type === 'chain_swap') {
+    state.chain = {
+      ...state.chain,
+      status: 'connected',
+      swaps: [message, ...state.chain.swaps].slice(0, 5),
+    }
+    notifyChain()
+    return
+  }
 
   if (message.type === 'connection' && message.status) {
     setStatus(message.status)
@@ -139,4 +177,14 @@ export function getPriceEventSnapshot(pair) {
 
 export function getStatusSnapshot() {
   return state.status
+}
+
+export function subscribeToChain(listener) {
+  startMarketStore()
+  chainListeners.add(listener)
+  return () => chainListeners.delete(listener)
+}
+
+export function getChainSnapshot() {
+  return state.chain
 }
