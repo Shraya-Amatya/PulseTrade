@@ -1,4 +1,4 @@
-import { useMarketChange, useMarketPrice } from '../../hooks/useMarketPrices.js'
+import { useMarketChange, useMarketPrice, useMarketStatus } from '../../hooks/useMarketPrices.js'
 
 const MARKETS = [
   { pair: 'BTCUSDT', label: 'BTC/USDT' },
@@ -14,8 +14,10 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
 })
 
 function MarketTicker() {
+  const status = useMarketStatus()
+
   return (
-    <section className="market-ticker" aria-label="Live market prices">
+    <section className="market-ticker" aria-label="Live market prices" aria-busy={status !== 'connected'}>
       {MARKETS.map((market) => (
         <MarketCard key={market.pair} {...market} />
       ))}

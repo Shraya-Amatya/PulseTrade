@@ -1,6 +1,6 @@
 function TradeHistory({ trades = [], loading }) {
   return (
-    <section className="dashboard-panel data-section" aria-labelledby="history-title">
+    <section className="dashboard-panel data-section" aria-labelledby="history-title" aria-busy={loading}>
       <div className="panel-heading">
         <h2 id="history-title">Trade history</h2>
       </div>
@@ -9,14 +9,17 @@ function TradeHistory({ trades = [], loading }) {
         <table>
           <thead>
             <tr>
-              <th>Time</th>
-              <th>Pair</th>
-              <th>Side</th>
-              <th>Quantity</th>
-              <th>Price</th>
+              <th scope="col">Time</th>
+              <th scope="col">Pair</th>
+              <th scope="col">Side</th>
+              <th scope="col">Quantity</th>
+              <th scope="col">Price</th>
             </tr>
           </thead>
           <tbody>
+            {loading && trades.length === 0 && (
+              <tr><td colSpan="5">Loading trade history…</td></tr>
+            )}
             {trades.map((trade) => (
               <tr key={trade.id}>
                 <td>{new Date(trade.createdAt).toLocaleString()}</td>

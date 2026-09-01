@@ -1,10 +1,14 @@
+import WalletConnection from '../WalletConnection/WalletConnection.jsx'
+
 function Header({ status }) {
   const isConnected = status === 'connected'
-  const statusLabel = isConnected
-    ? 'Connected'
-    : status === 'reconnecting'
-      ? 'Reconnecting'
-      : 'Connecting'
+  const statusLabel = {
+    connected: 'Connected',
+    reconnecting: 'Reconnecting',
+    disconnected: 'Disconnected',
+    error: 'Connection error',
+    connecting: 'Connecting',
+  }[status] || 'Connecting'
 
   return (
     <header className="app-header">
@@ -15,12 +19,13 @@ function Header({ status }) {
       <div className="app-header__account">
         <span className="demo-badge">Demo Account</span>
         <span
-          className={`connection-status connection-status--${isConnected ? 'online' : 'pending'}`}
+          className={`connection-status connection-status--${isConnected ? 'online' : status === 'error' ? 'error' : 'pending'}`}
           role="status"
         >
           <span aria-hidden="true">●</span>
           {statusLabel}
         </span>
+        <WalletConnection />
       </div>
     </header>
   )

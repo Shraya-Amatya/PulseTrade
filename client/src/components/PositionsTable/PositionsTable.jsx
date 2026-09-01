@@ -1,6 +1,6 @@
 function PositionsTable({ positions = [], loading }) {
   return (
-    <section className="dashboard-panel data-section" aria-labelledby="positions-title">
+    <section className="dashboard-panel data-section" aria-labelledby="positions-title" aria-busy={loading}>
       <div className="panel-heading">
         <h2 id="positions-title">Positions</h2>
       </div>
@@ -9,17 +9,31 @@ function PositionsTable({ positions = [], loading }) {
         <table>
           <thead>
             <tr>
-              <th>Pair</th>
-              <th>Quantity</th>
-              <th>Average entry</th>
+              <th scope="col">Pair</th>
+              <th scope="col">Quantity</th>
+              <th scope="col">Average entry</th>
+              <th scope="col">Current price</th>
+              <th scope="col">Position value</th>
+              <th scope="col">Unrealized P/L</th>
             </tr>
           </thead>
           <tbody>
+            {loading && positions.length === 0 && (
+              <tr><td colSpan="6">Loading positions…</td></tr>
+            )}
             {positions.map((position) => (
               <tr key={position.pair}>
                 <td>{position.pair}</td>
                 <td>{position.quantity}</td>
                 <td>${position.averageEntryPrice.toLocaleString('en-US')}</td>
+                <td>{position.currentPrice == null ? '—' : `$${position.currentPrice.toLocaleString('en-US')}`}</td>
+                <td>{position.positionValue == null ? '—' : `$${position.positionValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</td>
+                <td className={position.unrealizedPnl == null
+                  ? ''
+                  : position.unrealizedPnl >= 0 ? 'value-positive' : 'value-negative'}
+                >
+                  {position.unrealizedPnl == null ? '—' : `$${position.unrealizedPnl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                </td>
               </tr>
             ))}
           </tbody>
