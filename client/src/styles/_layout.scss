@@ -470,6 +470,28 @@
     }
   }
 
+  &__failure {
+    display: grid;
+    gap: tokens.$space-2;
+    padding: tokens.$space-3;
+    border: 1px solid #fecaca;
+    border-radius: tokens.$radius-sm;
+    background: #fef2f2;
+  }
+
+  &__retry {
+    justify-self: start;
+    min-height: 2.25rem;
+    padding: 0 tokens.$space-3;
+    border: 1px solid #fca5a5;
+    border-radius: tokens.$radius-sm;
+    color: tokens.$color-negative;
+    background: tokens.$color-surface;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
   &__actions {
     display: flex;
     flex-wrap: wrap;
