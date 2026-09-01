@@ -1,3 +1,10 @@
+const currencyFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+})
+
 function TradeHistory({ trades = [], loading }) {
   return (
     <section className="dashboard-panel data-section" aria-labelledby="history-title" aria-busy={loading}>
@@ -26,7 +33,7 @@ function TradeHistory({ trades = [], loading }) {
                 <td>{trade.pair}</td>
                 <td>{trade.side}</td>
                 <td>{trade.quantity}</td>
-                <td>${trade.executionPrice.toLocaleString('en-US')}</td>
+                <td>{currencyFormatter.format(trade.executionPrice)}</td>
               </tr>
             ))}
           </tbody>

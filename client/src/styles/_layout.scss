@@ -44,6 +44,9 @@
 
   &__button,
   &__disconnect {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     min-height: 2.25rem;
     padding: 0 tokens.$space-3;
     border: 1px solid tokens.$color-border;
@@ -53,6 +56,7 @@
     cursor: pointer;
     font-size: 0.8125rem;
     font-weight: 700;
+    text-decoration: none;
   }
 
   &__button {
@@ -785,7 +789,33 @@
   min-height: 22rem;
 
   &__canvas {
-    min-height: 18rem;
+    width: 100%;
+    height: 18.75rem;
+  }
+
+  &__summary {
+    display: grid;
+    justify-items: end;
+    gap: tokens.$space-1;
+  }
+
+  &__status {
+    display: inline-flex;
+    align-items: center;
+    gap: tokens.$space-1;
+    color: tokens.$color-muted;
+    font-size: 0.6875rem;
+    font-weight: 700;
+
+    &--live {
+      color: tokens.$color-positive;
+    }
+  }
+
+  &__note {
+    margin: tokens.$space-3 0 0;
+    color: tokens.$color-muted;
+    font-size: 0.75rem;
   }
 }
 

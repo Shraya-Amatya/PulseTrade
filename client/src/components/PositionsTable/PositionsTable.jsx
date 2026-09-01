@@ -1,3 +1,10 @@
+const currencyFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+})
+
 function PositionsTable({ positions = [], loading }) {
   return (
     <section className="dashboard-panel data-section" aria-labelledby="positions-title" aria-busy={loading}>
@@ -25,14 +32,14 @@ function PositionsTable({ positions = [], loading }) {
               <tr key={position.pair}>
                 <td>{position.pair}</td>
                 <td>{position.quantity}</td>
-                <td>${position.averageEntryPrice.toLocaleString('en-US')}</td>
-                <td>{position.currentPrice == null ? '—' : `$${position.currentPrice.toLocaleString('en-US')}`}</td>
-                <td>{position.positionValue == null ? '—' : `$${position.positionValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</td>
+                <td>{currencyFormatter.format(position.averageEntryPrice)}</td>
+                <td>{position.currentPrice == null ? '—' : currencyFormatter.format(position.currentPrice)}</td>
+                <td>{position.positionValue == null ? '—' : currencyFormatter.format(position.positionValue)}</td>
                 <td className={position.unrealizedPnl == null
                   ? ''
                   : position.unrealizedPnl >= 0 ? 'value-positive' : 'value-negative'}
                 >
-                  {position.unrealizedPnl == null ? '—' : `$${position.unrealizedPnl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                  {position.unrealizedPnl == null ? '—' : currencyFormatter.format(position.unrealizedPnl)}
                 </td>
               </tr>
             ))}

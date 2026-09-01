@@ -14,6 +14,7 @@ The project currently includes:
 - PostgreSQL database with portfolio, positions, and trades tables
 - Seeded demo portfolio with `$10,000`
 - Binance BTCUSDT, ETHUSDT, and SOLUSDT trade streams
+- Normalized Binance candle history for immediate chart context
 - Server-owned WebSocket relay at `ws://localhost:3000`
 - Pair-scoped React market store
 - Live Lightweight Charts line chart for BTC/USDT
@@ -40,6 +41,7 @@ Portfolio valuation is calculated by the server from PostgreSQL positions and th
 
 - Live BTC/USDT, ETH/USDT, and SOL/USDT prices
 - Live BTC/USDT chart updated from the market WebSocket
+- Silent-feed detection and automatic market-stream reconnection
 - Demo account and portfolio summary
 - Positions and trade-history views
 - PostgreSQL-backed persistence
@@ -65,6 +67,12 @@ server/src/market/marketHub.js
 client/src/stores/marketStore.js
           ├── MarketTicker
           └── PriceChart
+
+Binance public REST market data
+          ↓ normalized one-second candles
+Express /api/market/candles
+          ↓
+PriceChart initial history
 
 React REST client
           ↓
@@ -92,7 +100,7 @@ The browser never depends on Binance's raw event format. The server converts ups
 }
 ```
 
-The React market store keeps updates pair-scoped. The chart receives price events through a focused subscription and batches visual updates every 250ms.
+The React market store keeps updates pair-scoped. The chart first loads normalized candle history from Express, then receives price events through a focused subscription and batches visual updates every 250ms. The server marks a silent upstream stream stale and reconnects it instead of leaving the dashboard frozen while claiming it is connected.
 
 Blockchain events are normalized before they reach the browser. Examples:
 
@@ -219,6 +227,8 @@ CLIENT_ORIGIN
 MARKET_PAIRS
 WEBSOCKET_PATH
 BINANCE_STREAM_URL
+BINANCE_REST_URL
+MARKET_STREAM_IDLE_TIMEOUT_MS
 EVM_RPC_URL
 EVM_WS_URL
 EVM_POOL_ADDRESSES
@@ -248,6 +258,7 @@ The Uniswap deployment mappings are documented in the [official Ethereum deploym
 
 ```text
 GET  /api/health
+GET  /api/market/candles?pair=BTCUSDT&interval=1s&limit=300
 GET  /api/portfolio
 GET  /api/trades?limit=50
 POST /api/trades      # simulated market order
@@ -302,7 +313,6 @@ PERFORMANCE.md
 - No mainnet interaction is implemented.
 - The Phase 8 pool display remains a local educational model; the Phase 9 executable path uses Uniswap v3 testnet contracts.
 - Blockchain activity is live only when the server has `EVM_RPC_URL` or `EVM_WS_URL` and watched addresses in `EVM_POOL_ADDRESSES`; missing configuration is reported as disabled.
-- The chart starts collecting live data when the page connects; it does not load historical candles yet.
 - Ticker percentages represent change during the current browser session, not Binance's 24-hour change.
 - No order book, limit orders, stop-loss orders, multi-hop routing, or mainnet blockchain interaction is included.
 - Cloud deployment requires configuring Vercel and Railway services with their own environment variables.

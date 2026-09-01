@@ -11,6 +11,7 @@ class MarketHub {
     binanceClient = new BinanceClient({
       url: config.binanceStreamUrl,
       pairs: config.marketPairs,
+      idleTimeoutMs: config.marketStreamIdleTimeoutMs,
     }),
     priceCache = new PriceCache({ pairs: config.marketPairs }),
     evmClient = new EvmClient({
