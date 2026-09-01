@@ -1,6 +1,16 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { createDemoPool } from './ammPool.js'
 import { calculateSwapQuote } from './swapQuote.js'
+
+test('builds a constant-product pool from the live market price', () => {
+  const pool = createDemoPool(2500)
+
+  assert.equal(pool.priceUsd, 2500)
+  assert.equal(pool.ethReserve, 400)
+  assert.equal(pool.usdcReserve, 1000000)
+  assert.equal(pool.invariant, pool.usdcReserve * pool.ethReserve)
+})
 
 test('calculates fee, price impact, output, and minimum received', () => {
   const quote = calculateSwapQuote({

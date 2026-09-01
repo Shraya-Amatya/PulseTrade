@@ -2,7 +2,7 @@
 
 PulseTrade is a real-time simulated crypto trading dashboard built to demonstrate product engineering for trading-style interfaces. It receives live public market data from Binance, relays it through an Express server, and renders a focused React dashboard with a live BTC/USDT chart.
 
-This is not a real exchange. It does not use real money or place real trading orders. The optional wallet section connects to Sepolia and can submit testnet ERC-20 approvals only.
+This is not a real exchange. It does not use real money or place real trading orders. The optional wallet section can read balances, approve tokens, and execute supported testnet swaps on Sepolia after explicit wallet confirmation.
 
 ## Current status
 
@@ -28,6 +28,7 @@ The project currently includes:
 - Transaction hash links, confirmation handling, and failed/reverted transaction states
 - Simulation-only USDC → WETH swap quote mechanics: slippage, minimum received, price impact, fee, gas preview, and deadline
 - Transparent USDC/ETH constant-product demo pool with reserves, liquidity, price, fee, and modeled LP share
+- Testnet Uniswap v3 execution path with direct-pool discovery, on-chain quotes, allowance gating, gas simulation, swap submission, receipt states, explorer links, and local transaction history
 
 The current trading engine supports simulated market orders through `POST /api/trades`.
 Portfolio valuation is calculated by the server from PostgreSQL positions and the server-owned price cache. If an open position has no fresh price, total value and P/L are shown as unavailable instead of using stale data.
@@ -43,8 +44,8 @@ Portfolio valuation is calculated by the server from PostgreSQL positions and th
 - Server-side market-data normalization
 - Server-side price selection with five-second freshness validation
 - Transaction-safe BUY/SELL execution with cash and holdings checks
-- Testnet token approvals are available for USDC and WETH; swap execution is intentionally not implemented
-- Swap mechanics are currently a transparent preview model; no swap transaction is submitted
+- Testnet token approvals are available for USDC and WETH
+- Swap mechanics include a transparent AMM preview model and a separate testnet Uniswap v3 execution path
 - Responsive layout and keyboard-visible focus states
 
 ## Architecture
@@ -94,9 +95,9 @@ Wagmi + Viem
 Sepolia RPC and ERC-20 contracts
 ```
 
-The client reads token metadata, balances, and allowances from Sepolia. Approval requests are sent only after an explicit user action, use the exact amount entered in the form, and expose the submitted transaction hash and receipt status. No swap contract is configured or called.
+The client reads token metadata, balances, and allowances from Sepolia. Approval requests are sent only after an explicit user action, use the exact amount entered in the form, and expose the submitted transaction hash and receipt status. The approval target defaults to the testnet Uniswap SwapRouter02 because it is the spender used by the executable swap panel.
 
-The swap preview uses the live ETH/USDT market price, a documented constant-product demo pool, and a simulated router gas limit to make execution tradeoffs visible before a real AMM or router is introduced.
+The swap preview uses the live ETH/USDT market price, a documented constant-product demo pool, and a simulated router gas limit to make execution tradeoffs visible. The executable panel uses direct Uniswap v3 testnet contracts.
 
 ## Technology
 
@@ -170,6 +171,9 @@ VITE_EVM_RPC_URL
 VITE_USDC_ADDRESS
 VITE_WETH_ADDRESS
 VITE_APPROVAL_SPENDER_ADDRESS
+VITE_UNISWAP_V3_FACTORY_ADDRESS
+VITE_UNISWAP_V3_QUOTER_ADDRESS
+VITE_SWAP_ROUTER_ADDRESS
 ```
 
 Server variables:
@@ -187,6 +191,20 @@ BINANCE_STREAM_URL
 Docker Compose also reads `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` from the ignored root `.env` file.
 
 Local `.env` files are ignored by Git. Never commit passwords, API keys, tokens, or production connection strings.
+
+### Sepolia contract defaults
+
+The client includes public testnet defaults for the supported flow. Every address can be overridden through the client environment variables above:
+
+```text
+USDC             0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238
+WETH             0xfff9976782d46cc05630d1f6ebab18b2324d6b14
+Uniswap Factory  0x0227628f3F023bb0B980b67D528571c95c6DaC1c
+QuoterV2         0xEd1f6473345F45b75F8179591dd5bA1888cf2FB3
+SwapRouter02     0x3bFA4769FB09eefC5a80d6E87c3B9C650f7Ae48E
+```
+
+The Uniswap deployment mappings are documented in the [official Ethereum deployments reference](https://developers.uniswap.org/docs/protocols/v3/deployments/v3-ethereum-deployments).
 
 ## API
 
@@ -216,9 +234,11 @@ client/
       TokenSystem/
       SwapMechanics/
       LiquidityPool/
+      DexExecution/
     hooks/
     pages/
     services/
+    config/
     stores/
     styles/
 server/
@@ -238,12 +258,12 @@ MVP_REQUIREMENTS.md
 - There is one hardcoded demo account and no authentication.
 - Trading is simulated only; there are no real orders or real-money balances.
 - Wallet and token interactions currently target the Sepolia test network only.
-- USDC and WETH balances/allowances are read from configurable token contracts; approval writes use the configured Permit2 spender by default.
-- No swap contract, blockchain trade, or mainnet interaction is implemented.
-- Swap quote mechanics use a simulated liquidity/fee model and are not an executable DEX quote.
+- USDC and WETH balances/allowances are read from configurable token contracts; approval writes use the configured SwapRouter02 spender by default.
+- No mainnet interaction is implemented.
+- The Phase 8 pool display remains a local educational model; the Phase 9 executable path uses Uniswap v3 testnet contracts.
 - The chart starts collecting live data when the page connects; it does not load historical candles yet.
 - Ticker percentages represent change during the current browser session, not Binance's 24-hour change.
-- No order book, limit orders, stop-loss orders, token swaps, or mainnet blockchain interaction is included.
+- No order book, limit orders, stop-loss orders, multi-hop routing, or mainnet blockchain interaction is included.
 - Cloud deployment requires configuring Vercel and Railway services with their own environment variables.
 
 ## Deployment
@@ -278,6 +298,6 @@ The application is prepared for deployment but is not deployed automatically fro
 
 ## Disclaimer
 
-PulseTrade is an educational portfolio project and a simulated trading application. It does not use real money, provide financial advice, manage assets, execute real trades, or execute swaps. Wallet interactions are optional, limited to public Sepolia reads and explicit testnet token approvals, and are provided for demonstration purposes only.
+PulseTrade is an educational portfolio project and a simulated trading application. It does not use real money or place real trading orders. Wallet interactions are optional and limited to public Sepolia reads, explicit approvals, and supported testnet swaps; users pay testnet gas and remain responsible for wallet confirmation. Market data and quotes are provided for demonstration purposes only.
 
 See [MVP_REQUIREMENTS.md](./MVP_REQUIREMENTS.md) for the fixed product scope and acceptance criteria.

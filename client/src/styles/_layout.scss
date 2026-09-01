@@ -399,6 +399,133 @@
   }
 }
 
+.dex-execution {
+  display: grid;
+  gap: tokens.$space-4;
+
+  .panel-heading {
+    margin-bottom: 0;
+  }
+
+  &__controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: tokens.$space-3;
+  }
+
+  &__quote {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: tokens.$space-3;
+    padding: tokens.$space-4;
+    border: 1px solid tokens.$color-border;
+    border-radius: tokens.$radius-sm;
+    background: tokens.$color-background;
+
+    div {
+      display: grid;
+      gap: tokens.$space-1;
+    }
+
+    span {
+      color: tokens.$color-muted;
+      font-size: 0.75rem;
+    }
+
+    strong {
+      overflow: hidden;
+      font-size: 0.875rem;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  &__route,
+  &__error,
+  &__status {
+    margin: 0;
+    font-size: 0.75rem;
+    line-height: 1.45;
+  }
+
+  &__route {
+    color: tokens.$color-muted;
+
+    a {
+      color: tokens.$color-accent;
+      font-weight: 700;
+    }
+  }
+
+  &__error {
+    color: tokens.$color-negative;
+  }
+
+  &__status {
+    color: tokens.$color-positive;
+
+    a {
+      color: inherit;
+      font-weight: 700;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: tokens.$space-3;
+  }
+
+  &__button {
+    min-height: 2.75rem;
+    padding: 0 tokens.$space-4;
+    border: 1px solid tokens.$color-border;
+    border-radius: tokens.$radius-sm;
+    color: tokens.$color-ink;
+    background: tokens.$color-surface;
+    cursor: pointer;
+    font-size: 0.8125rem;
+    font-weight: 700;
+
+    &--primary {
+      color: #ffffff;
+      border-color: tokens.$color-accent;
+      background: tokens.$color-accent;
+    }
+
+    &:disabled {
+      border-color: tokens.$color-border;
+      color: #94a3b8;
+      background: #e2e8f0;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.dex-history {
+  display: grid;
+  gap: tokens.$space-2;
+  padding-top: tokens.$space-3;
+  border-top: 1px solid tokens.$color-border;
+
+  h3 {
+    margin: 0;
+    font-size: 0.875rem;
+  }
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    gap: tokens.$space-3;
+    font-size: 0.75rem;
+  }
+
+  a {
+    color: tokens.$color-accent;
+    font-weight: 700;
+  }
+}
+
 .demo-badge {
   padding: tokens.$space-2 tokens.$space-3;
   border: 1px solid tokens.$color-border;
@@ -732,6 +859,10 @@ table {
     grid-template-columns: 1fr;
   }
 
+  .dex-execution__quote {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .swap-breakdown {
     padding: 0;
     border-top: 1px solid tokens.$color-border;
@@ -767,5 +898,15 @@ table {
 
   .pool-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dex-execution__controls,
+  .dex-execution__quote {
+    grid-template-columns: 1fr;
+  }
+
+  .dex-history div {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
