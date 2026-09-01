@@ -21,6 +21,8 @@ The project currently includes:
 - Server-authoritative simulated market-order engine
 - Atomic BUY/SELL updates across portfolio, positions, and trade history
 - Live position valuation: current price, position value, and unrealized P/L
+- Read-only EVM wallet connection for MetaMask/browser wallets
+- Sepolia network detection, wrong-network guidance, and native balance display
 
 The current trading engine supports simulated market orders through `POST /api/trades`.
 Portfolio valuation is calculated by the server from PostgreSQL positions and the server-owned price cache. If an open position has no fresh price, total value and P/L are shown as unavailable instead of using stale data.
@@ -36,6 +38,7 @@ Portfolio valuation is calculated by the server from PostgreSQL positions and th
 - Server-side market-data normalization
 - Server-side price selection with five-second freshness validation
 - Transaction-safe BUY/SELL execution with cash and holdings checks
+- Wallet connection is intentionally read-only; this phase does not request signatures or transactions
 - Responsive layout and keyboard-visible focus states
 
 ## Architecture
@@ -80,6 +83,7 @@ The React market store keeps updates pair-scoped. The chart receives price event
 - React and Vite
 - JavaScript
 - Sass/SCSS
+- Wagmi, Viem, and TanStack Query for wallet state
 - Node.js and Express
 - `ws` WebSockets
 - PostgreSQL and `pg`
@@ -142,6 +146,7 @@ Client variables:
 ```text
 VITE_API_URL
 VITE_WS_URL
+VITE_EVM_RPC_URL
 ```
 
 Server variables:
@@ -206,6 +211,8 @@ MVP_REQUIREMENTS.md
 
 - There is one hardcoded demo account and no authentication.
 - Trading is simulated only; there are no real orders or real-money balances.
+- Wallet connection currently targets the Sepolia test network and reads native balance only.
+- No wallet signatures, token approvals, contract calls, or blockchain trades are implemented.
 - The chart starts collecting live data when the page connects; it does not load historical candles yet.
 - Ticker percentages represent change during the current browser session, not Binance's 24-hour change.
 - No order book, limit orders, stop-loss orders, wallet connection, or blockchain integration is included.

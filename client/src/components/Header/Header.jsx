@@ -1,3 +1,5 @@
+import WalletConnection from '../WalletConnection/WalletConnection.jsx'
+
 function Header({ status }) {
   const isConnected = status === 'connected'
   const statusLabel = {
@@ -23,6 +25,7 @@ function Header({ status }) {
           <span aria-hidden="true">●</span>
           {statusLabel}
         </span>
+        <WalletConnection />
       </div>
     </header>
   )
