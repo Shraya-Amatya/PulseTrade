@@ -199,6 +199,48 @@
     border-radius: tokens.$radius-sm;
     color: #ffffff;
     background: tokens.$color-muted;
+
+    &:not(:disabled) {
+      background: tokens.$color-accent;
+      cursor: pointer;
+    }
+  }
+
+  form {
+    display: grid;
+    gap: tokens.$space-4;
+  }
+
+  &__quote,
+  &__hint,
+  &__message,
+  &__error {
+    margin: 0;
+    font-size: 0.8125rem;
+  }
+
+  &__quote {
+    display: flex;
+    justify-content: space-between;
+    gap: tokens.$space-3;
+    color: tokens.$color-muted;
+
+    strong {
+      color: tokens.$color-ink;
+    }
+  }
+
+  &__hint {
+    color: tokens.$color-muted;
+    line-height: 1.45;
+  }
+
+  &__message {
+    color: tokens.$color-positive;
+  }
+
+  &__error {
+    color: tokens.$color-negative;
   }
 }
 

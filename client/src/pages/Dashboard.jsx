@@ -7,7 +7,7 @@ import TradeTicket from '../components/TradeTicket/TradeTicket.jsx'
 import useDashboardData from '../hooks/useDashboardData.js'
 
 function Dashboard() {
-  const { portfolio, trades, loading, error } = useDashboardData()
+  const { portfolio, trades, loading, error, refresh } = useDashboardData()
 
   return (
     <div className="dashboard">
@@ -17,7 +17,7 @@ function Dashboard() {
 
       <div className="trading-workspace">
         <PriceChart />
-        <TradeTicket />
+        <TradeTicket onTrade={refresh} />
       </div>
 
       <PortfolioSummary portfolio={portfolio} loading={loading} />

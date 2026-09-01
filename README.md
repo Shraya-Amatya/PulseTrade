@@ -18,8 +18,10 @@ The project currently includes:
 - Pair-scoped React market store
 - Live Lightweight Charts line chart for BTC/USDT
 - Live market ticker with session-based percentage changes
+- Server-authoritative simulated market-order engine
+- Atomic BUY/SELL updates across portfolio, positions, and trade history
 
-The next major feature is simulated market-order execution through `POST /api/trade`.
+The current trading engine supports simulated market orders through `POST /api/trades`.
 
 ## Features
 
@@ -30,6 +32,8 @@ The next major feature is simulated market-order execution through `POST /api/tr
 - PostgreSQL-backed persistence
 - WebSocket reconnect handling on the client and server
 - Server-side market-data normalization
+- Server-side price selection with five-second freshness validation
+- Transaction-safe BUY/SELL execution with cash and holdings checks
 - Responsive layout and keyboard-visible focus states
 
 ## Architecture
@@ -160,7 +164,8 @@ Local `.env` files are ignored by Git. Never commit passwords, API keys, tokens,
 GET  /api/health
 GET  /api/portfolio
 GET  /api/trades?limit=50
-POST /api/trade       # planned, not implemented yet
+POST /api/trades      # simulated market order
+POST /api/trade       # compatibility alias
 ```
 
 ## Project structure
@@ -196,7 +201,7 @@ MVP_REQUIREMENTS.md
 ## Known limitations
 
 - There is one hardcoded demo account and no authentication.
-- Trading is not real and `POST /api/trade` is not implemented yet.
+- Trading is simulated only; there are no real orders or real-money balances.
 - The chart starts collecting live data when the page connects; it does not load historical candles yet.
 - Ticker percentages represent change during the current browser session, not Binance's 24-hour change.
 - No order book, limit orders, stop-loss orders, wallet connection, or blockchain integration is included.
