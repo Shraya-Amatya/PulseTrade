@@ -28,11 +28,24 @@ class MarketHub {
     this.clients = new Set();
     this.connectionStatus = 'disconnected';
     this.webSocketServer = new WebSocketServer({ noServer: true });
+    this.heartbeatTimer = setInterval(() => {
+      for (const client of this.clients) {
+        if (client.isAlive === false) {
+          client.terminate();
+          this.clients.delete(client);
+          continue;
+        }
+        client.isAlive = false;
+        client.ping();
+      }
+    }, 30000);
+    this.heartbeatTimer.unref?.();
 
     this.handleUpgrade = (request, socket, head) => {
       const requestUrl = new URL(request.url, 'http://localhost');
+      const origin = request.headers.origin;
 
-      if (!this.websocketPaths.has(requestUrl.pathname)) {
+      if (!this.websocketPaths.has(requestUrl.pathname) || (origin && config.clientOrigin !== '*' && origin !== config.clientOrigin)) {
         socket.destroy();
         return;
       }
@@ -45,6 +58,8 @@ class MarketHub {
     this.server.on('upgrade', this.handleUpgrade);
     this.webSocketServer.on('connection', (client) => {
       this.clients.add(client);
+      client.isAlive = true;
+      client.on('pong', () => { client.isAlive = true; });
       this.send(client, { type: 'connection', status: this.connectionStatus });
 
       for (const price of this.priceCache.getSnapshot()) {
@@ -89,6 +104,7 @@ class MarketHub {
   stop() {
     this.binanceClient.stop();
     this.evmClient.stop();
+    clearInterval(this.heartbeatTimer);
     for (const client of this.clients) {
       client.close();
     }
