@@ -20,8 +20,10 @@ The project currently includes:
 - Live market ticker with session-based percentage changes
 - Server-authoritative simulated market-order engine
 - Atomic BUY/SELL updates across portfolio, positions, and trade history
+- Live position valuation: current price, position value, and unrealized P/L
 
 The current trading engine supports simulated market orders through `POST /api/trades`.
+Portfolio valuation is calculated by the server from PostgreSQL positions and the server-owned price cache. If an open position has no fresh price, total value and P/L are shown as unavailable instead of using stale data.
 
 ## Features
 
@@ -168,6 +170,8 @@ POST /api/trades      # simulated market order
 POST /api/trade       # compatibility alias
 ```
 
+`POST /api/trades` accepts `{ "pair": "BTCUSDT", "side": "BUY", "quantity": "0.01" }`. The server ignores any client-supplied price and returns the server-selected execution price.
+
 ## Project structure
 
 ```text
@@ -205,7 +209,37 @@ MVP_REQUIREMENTS.md
 - The chart starts collecting live data when the page connects; it does not load historical candles yet.
 - Ticker percentages represent change during the current browser session, not Binance's 24-hour change.
 - No order book, limit orders, stop-loss orders, wallet connection, or blockchain integration is included.
-- The public demo will require production environment configuration and deployment before it is hosted.
+- Cloud deployment requires configuring Vercel and Railway services with their own environment variables.
+
+## Deployment
+
+The recommended production layout is:
+
+```text
+Vercel (client)
+      ↓ HTTPS / WSS
+Railway (Express server)
+      ↓ private DATABASE_URL
+Railway (PostgreSQL)
+```
+
+### Railway
+
+1. Create a Railway project and add a PostgreSQL service.
+2. Add the server as a service with `server` as its root directory.
+3. Use `npm install` as the install step and `npm start` as the start command.
+4. Configure `DATABASE_URL` from the Railway PostgreSQL service, plus `NODE_ENV=production`, `CLIENT_ORIGIN`, and optional market settings from `server/.env.example`.
+5. Expose the server and verify `/api/health` returns `{ "status": "ok" }`.
+
+### Vercel
+
+1. Import the repository as a Vercel project with `client` as the root directory.
+2. Use `npm run build` as the build command and `dist` as the output directory.
+3. Set `VITE_API_URL` to the public Railway HTTPS URL.
+4. Set `VITE_WS_URL` to the public Railway WebSocket URL using `wss://`.
+5. Update Railway's `CLIENT_ORIGIN` to the exact Vercel URL and verify live prices, chart updates, and a simulated trade.
+
+The application is prepared for deployment but is not deployed automatically from this repository. Provider account access, project creation, and production secrets must be supplied by the repository owner.
 
 ## Disclaimer
 

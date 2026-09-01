@@ -15,9 +15,10 @@ function useDashboardData() {
   useEffect(() => {
     let active = true
 
-    Promise.all([fetchPortfolio(), fetchTrades()])
+    const loadData = () => Promise.all([fetchPortfolio(), fetchTrades()])
       .then(([portfolioData, tradesData]) => {
         if (!active) return
+        setError(null)
         setPortfolio(portfolioData)
         setTrades(tradesData.trades)
       })
@@ -28,8 +29,12 @@ function useDashboardData() {
         if (active) setLoading(false)
       })
 
+    loadData()
+    const intervalId = window.setInterval(loadData, 1000)
+
     return () => {
       active = false
+      window.clearInterval(intervalId)
     }
   }, [reloadToken])
 

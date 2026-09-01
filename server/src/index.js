@@ -4,7 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const config = require('./config');
 const pool = require('./db/pool');
-const portfolioRoutes = require('./api/portfolioRoutes');
+const { createPortfolioRouter } = require('./api/portfolioRoutes');
 const { createTradesRouter } = require('./api/tradesRoutes');
 const MarketHub = require('./market/marketHub');
 const { TradingEngine } = require('./services/tradingEngine');
@@ -26,9 +26,13 @@ const tradingEngine = new TradingEngine({
   priceCache: marketHub.priceCache,
   supportedPairs: config.marketPairs,
 });
+const portfolioRouter = createPortfolioRouter({
+  database: pool,
+  priceCache: marketHub.priceCache,
+});
 const tradesRouter = createTradesRouter({ database: pool, tradingEngine });
 
-app.use('/api/portfolio', portfolioRoutes);
+app.use('/api/portfolio', portfolioRouter);
 app.use('/api/trades', tradesRouter);
 app.use('/api/trade', tradesRouter);
 
@@ -37,3 +41,13 @@ server.listen(config.port, () => {
   console.log(`Market WebSocket available at ws://localhost:${config.port}${config.websocketPath}`);
   marketHub.start();
 });
+
+async function shutdown(signal) {
+  console.log(`Received ${signal}; shutting down PulseTrade server.`);
+  marketHub.stop();
+  await pool.end();
+  process.exit(0);
+}
+
+process.once('SIGINT', () => shutdown('SIGINT'));
+process.once('SIGTERM', () => shutdown('SIGTERM'));

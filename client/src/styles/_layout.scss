@@ -58,6 +58,10 @@
   &--online {
     color: tokens.$color-positive;
   }
+
+  &--error {
+    color: tokens.$color-negative;
+  }
 }
 
 .app-main {
@@ -157,6 +161,24 @@
     font-weight: 700;
     text-transform: uppercase;
   }
+}
+
+.panel-status,
+.data-note {
+  color: tokens.$color-muted;
+  font-size: 0.75rem;
+}
+
+.data-note {
+  margin: tokens.$space-4 0 0;
+}
+
+.value-positive {
+  color: tokens.$color-positive;
+}
+
+.value-negative {
+  color: tokens.$color-negative;
 }
 
 .price-chart {
