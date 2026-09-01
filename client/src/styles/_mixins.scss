@@ -1,0 +1,12 @@
+@use 'tokens';
+
+@mixin focus-ring {
+  outline: 3px solid rgba(tokens.$color-accent, 0.25);
+  outline-offset: 2px;
+}
+
+@mixin panel {
+  border: 1px solid tokens.$color-border;
+  border-radius: tokens.$radius-md;
+  background: tokens.$color-surface;
+}

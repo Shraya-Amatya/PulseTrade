@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+client/.vite/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+build/
+coverage/
+client/dist/
+.vercel/
+
+# Local database data
+postgres-data/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Local editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

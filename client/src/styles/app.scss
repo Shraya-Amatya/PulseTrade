@@ -1,0 +1,19 @@
+@use 'tokens';
+@use 'reset';
+@use 'mixins';
+@use 'layout';
+
+:root {
+  color: tokens.$color-ink;
+  background: tokens.$color-background;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  @include mixins.focus-ring;
+}
