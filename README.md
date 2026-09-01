@@ -27,6 +27,7 @@ The project currently includes:
 - ERC-20 allowance reads and exact-amount approval transactions
 - Transaction hash links, confirmation handling, and failed/reverted transaction states
 - Simulation-only USDC → WETH swap quote mechanics: slippage, minimum received, price impact, fee, gas preview, and deadline
+- Transparent USDC/ETH constant-product demo pool with reserves, liquidity, price, fee, and modeled LP share
 
 The current trading engine supports simulated market orders through `POST /api/trades`.
 Portfolio valuation is calculated by the server from PostgreSQL positions and the server-owned price cache. If an open position has no fresh price, total value and P/L are shown as unavailable instead of using stale data.
@@ -95,7 +96,7 @@ Sepolia RPC and ERC-20 contracts
 
 The client reads token metadata, balances, and allowances from Sepolia. Approval requests are sent only after an explicit user action, use the exact amount entered in the form, and expose the submitted transaction hash and receipt status. No swap contract is configured or called.
 
-The Phase 7 swap preview uses the live ETH/USDT market price, a documented virtual-liquidity assumption, and a simulated router gas limit to make execution tradeoffs visible before a real AMM or router is introduced.
+The swap preview uses the live ETH/USDT market price, a documented constant-product demo pool, and a simulated router gas limit to make execution tradeoffs visible before a real AMM or router is introduced.
 
 ## Technology
 
@@ -212,6 +213,9 @@ client/
       PriceChart/
       TradeHistory/
       TradeTicket/
+      TokenSystem/
+      SwapMechanics/
+      LiquidityPool/
     hooks/
     pages/
     services/
