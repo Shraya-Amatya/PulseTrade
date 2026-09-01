@@ -2,7 +2,7 @@
 
 PulseTrade is a real-time simulated crypto trading dashboard built to demonstrate product engineering for trading-style interfaces. It receives live public market data from Binance, relays it through an Express server, and renders a focused React dashboard with a live BTC/USDT chart.
 
-This is not a real exchange. It does not use real money, connect to wallets, execute blockchain transactions, or place real orders.
+This is not a real exchange. It does not use real money or place real trading orders. The optional wallet section connects to Sepolia and can submit testnet ERC-20 approvals only.
 
 ## Current status
 
@@ -21,8 +21,11 @@ The project currently includes:
 - Server-authoritative simulated market-order engine
 - Atomic BUY/SELL updates across portfolio, positions, and trade history
 - Live position valuation: current price, position value, and unrealized P/L
-- Read-only EVM wallet connection for MetaMask/browser wallets
+- EVM wallet connection for MetaMask/browser wallets
 - Sepolia network detection, wrong-network guidance, and native balance display
+- Sepolia ERC-20 metadata and wallet-balance reads for USDC and WETH
+- ERC-20 allowance reads and exact-amount approval transactions
+- Transaction hash links, confirmation handling, and failed/reverted transaction states
 
 The current trading engine supports simulated market orders through `POST /api/trades`.
 Portfolio valuation is calculated by the server from PostgreSQL positions and the server-owned price cache. If an open position has no fresh price, total value and P/L are shown as unavailable instead of using stale data.
@@ -38,7 +41,7 @@ Portfolio valuation is calculated by the server from PostgreSQL positions and th
 - Server-side market-data normalization
 - Server-side price selection with five-second freshness validation
 - Transaction-safe BUY/SELL execution with cash and holdings checks
-- Wallet connection is intentionally read-only; this phase does not request signatures or transactions
+- Testnet token approvals are available for USDC and WETH; swap execution is intentionally not implemented
 - Responsive layout and keyboard-visible focus states
 
 ## Architecture
@@ -77,6 +80,18 @@ The browser never depends on Binance's raw event format. The server converts ups
 ```
 
 The React market store keeps updates pair-scoped. The chart receives price events through a focused subscription and batches visual updates every 250ms.
+
+Wallet and token data follows a separate on-chain path:
+
+```text
+React wallet/token UI
+          ↓
+Wagmi + Viem
+          ↓
+Sepolia RPC and ERC-20 contracts
+```
+
+The client reads token metadata, balances, and allowances from Sepolia. Approval requests are sent only after an explicit user action, use the exact amount entered in the form, and expose the submitted transaction hash and receipt status. No swap contract is configured or called.
 
 ## Technology
 
@@ -147,6 +162,9 @@ Client variables:
 VITE_API_URL
 VITE_WS_URL
 VITE_EVM_RPC_URL
+VITE_USDC_ADDRESS
+VITE_WETH_ADDRESS
+VITE_APPROVAL_SPENDER_ADDRESS
 ```
 
 Server variables:
@@ -211,11 +229,12 @@ MVP_REQUIREMENTS.md
 
 - There is one hardcoded demo account and no authentication.
 - Trading is simulated only; there are no real orders or real-money balances.
-- Wallet connection currently targets the Sepolia test network and reads native balance only.
-- No wallet signatures, token approvals, contract calls, or blockchain trades are implemented.
+- Wallet and token interactions currently target the Sepolia test network only.
+- USDC and WETH balances/allowances are read from configurable token contracts; approval writes use the configured Permit2 spender by default.
+- No swap contract, blockchain trade, or mainnet interaction is implemented.
 - The chart starts collecting live data when the page connects; it does not load historical candles yet.
 - Ticker percentages represent change during the current browser session, not Binance's 24-hour change.
-- No order book, limit orders, stop-loss orders, wallet connection, or blockchain integration is included.
+- No order book, limit orders, stop-loss orders, token swaps, or mainnet blockchain interaction is included.
 - Cloud deployment requires configuring Vercel and Railway services with their own environment variables.
 
 ## Deployment
@@ -250,6 +269,6 @@ The application is prepared for deployment but is not deployed automatically fro
 
 ## Disclaimer
 
-PulseTrade is an educational portfolio project and a simulated trading application. It does not use real money, provide financial advice, manage assets, connect to user wallets, or execute real trades. Market data is provided for demonstration purposes only.
+PulseTrade is an educational portfolio project and a simulated trading application. It does not use real money, provide financial advice, manage assets, execute real trades, or execute swaps. Wallet interactions are optional, limited to public Sepolia reads and explicit testnet token approvals, and are provided for demonstration purposes only.
 
 See [MVP_REQUIREMENTS.md](./MVP_REQUIREMENTS.md) for the fixed product scope and acceptance criteria.

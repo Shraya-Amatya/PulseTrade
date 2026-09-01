@@ -88,7 +88,7 @@ function WalletConnection() {
           {getErrorMessage(switchError, `Switch to ${TARGET_CHAIN.name} in your wallet to continue.`)}
         </span>
       )}
-      <span className="wallet-connection__hint">Read-only wallet connection. No transaction requests.</span>
+      <span className="wallet-connection__hint">Simulated trading; on-chain writes are limited to testnet token approvals.</span>
     </div>
   )
 }

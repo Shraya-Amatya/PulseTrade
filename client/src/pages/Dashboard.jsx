@@ -4,6 +4,7 @@ import PositionsTable from '../components/PositionsTable/PositionsTable.jsx'
 import PriceChart from '../components/PriceChart/PriceChart.jsx'
 import TradeHistory from '../components/TradeHistory/TradeHistory.jsx'
 import TradeTicket from '../components/TradeTicket/TradeTicket.jsx'
+import TokenSystem from '../components/TokenSystem/TokenSystem.jsx'
 import useDashboardData from '../hooks/useDashboardData.js'
 
 function Dashboard() {
@@ -20,6 +21,7 @@ function Dashboard() {
         <TradeTicket onTrade={refresh} />
       </div>
 
+      <TokenSystem />
       <PortfolioSummary portfolio={portfolio} loading={loading} />
       <PositionsTable positions={portfolio?.positions} loading={loading} />
       <TradeHistory trades={trades} loading={loading} />
