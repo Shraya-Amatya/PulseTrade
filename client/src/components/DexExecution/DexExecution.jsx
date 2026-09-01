@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { formatEther, formatUnits, parseUnits, zeroAddress } from 'viem'
 import {
   useConnection,
+  useBlockNumber,
   useGasPrice,
   useReadContract,
   useReadContracts,
@@ -173,6 +174,11 @@ function DexExecution() {
     chainId: TARGET_CHAIN.id,
     query: { refetchInterval: 15000 },
   })
+  const { data: blockNumber } = useBlockNumber({
+    chainId: TARGET_CHAIN.id,
+    watch: true,
+    query: { enabled: isCorrectNetwork },
+  })
 
   const quoteAmountOut = bestRoute?.amountOut || null
   const amountOutMinimum = quoteAmountOut == null || !isValidSlippage
@@ -203,6 +209,12 @@ function DexExecution() {
     chainId: TARGET_CHAIN.id,
     query: { enabled: Boolean(readEnabled && quoteReady && allowanceSufficient && !insufficientBalance && !quoteExpired) },
   })
+
+  useEffect(() => {
+    if (!blockNumber || !isCorrectNetwork) return
+    refetchBalance()
+    refetchAllowance()
+  }, [blockNumber, isCorrectNetwork, refetchAllowance, refetchBalance])
 
   const {
     writeContract: writeApproval,
@@ -267,6 +279,11 @@ function DexExecution() {
   const handleSwap = () => {
     if (!simulation.data?.request || quoteExpired) return
     writeSwap(simulation.data.request)
+  }
+
+  const handleRefreshAndRetry = () => {
+    setQuoteGeneratedAt(Date.now())
+    simulation.refetch()
   }
 
   const gasEstimate = simulation.data?.request?.gas || bestRoute?.gasEstimate || null
@@ -348,12 +365,13 @@ function DexExecution() {
       {approvalWriteError && <p className="dex-execution__error" role="alert">{errorMessage(approvalWriteError, 'Approval transaction could not be submitted.')}</p>}
       {isApprovalFailed && <p className="dex-execution__error" role="alert">{errorMessage(approvalReceiptError, 'Approval transaction failed or reverted.')}</p>}
       {approvalHash && <p className="dex-execution__status" role="status">Approval: <a href={explorerTransactionUrl(approvalHash)} target="_blank" rel="noreferrer">{shorten(approvalHash)} ↗</a></p>}
+      {simulation.error && <p className="dex-execution__error" role="alert">{errorMessage(simulation.error, 'The wallet simulation rejected this swap. Check balance, allowance, slippage, and route liquidity.')}</p>}
       {swapWriteError && <p className="dex-execution__error" role="alert">{errorMessage(swapWriteError, 'Swap transaction could not be submitted.')}</p>}
-      {isSwapFailed && <p className="dex-execution__error" role="alert">{errorMessage(swapReceiptError, 'Swap transaction failed or reverted. Check slippage, balance, and gas, then retry.')}</p>}
+      {isSwapFailed && <div className="dex-execution__failure"><p className="dex-execution__error" role="alert">{errorMessage(swapReceiptError, 'Swap transaction failed or reverted. Check slippage, balance, and gas, then retry.')}</p><button className="dex-execution__retry" type="button" onClick={handleRefreshAndRetry}>Refresh quote & retry</button></div>}
       {swapHash && <p className="dex-execution__status" role="status">Swap: <a href={explorerTransactionUrl(swapHash)} target="_blank" rel="noreferrer">{shorten(swapHash)} ↗</a>{isSwapConfirmed ? ' · confirmed' : isSwapConfirming ? ' · confirming' : ' · submitted'}</p>}
 
       {transactionHistory.length > 0 && <div className="dex-history"><h3>Recent on-chain activity</h3>{transactionHistory.map((transaction) => <div key={transaction.hash}><span>{transaction.type} · {transaction.pair}</span><a href={explorerTransactionUrl(transaction.hash)} target="_blank" rel="noreferrer">{shorten(transaction.hash)} ↗</a></div>)}</div>}
-      <p className="data-note">Real testnet interaction. This panel can move ERC-20 tokens on Sepolia after explicit wallet confirmation; simulated trading remains available above.</p>
+      <p className="data-note">Real testnet interaction. This panel can move ERC-20 tokens on Sepolia after explicit wallet confirmation; simulated trading remains available above. {blockNumber ? `Latest observed block: ${blockNumber.toString()}.` : 'Waiting for a Sepolia block update.'}</p>
     </section>
   )
 }
