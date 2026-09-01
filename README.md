@@ -26,6 +26,7 @@ The project currently includes:
 - Sepolia ERC-20 metadata and wallet-balance reads for USDC and WETH
 - ERC-20 allowance reads and exact-amount approval transactions
 - Transaction hash links, confirmation handling, and failed/reverted transaction states
+- Simulation-only USDC → WETH swap quote mechanics: slippage, minimum received, price impact, fee, gas preview, and deadline
 
 The current trading engine supports simulated market orders through `POST /api/trades`.
 Portfolio valuation is calculated by the server from PostgreSQL positions and the server-owned price cache. If an open position has no fresh price, total value and P/L are shown as unavailable instead of using stale data.
@@ -42,6 +43,7 @@ Portfolio valuation is calculated by the server from PostgreSQL positions and th
 - Server-side price selection with five-second freshness validation
 - Transaction-safe BUY/SELL execution with cash and holdings checks
 - Testnet token approvals are available for USDC and WETH; swap execution is intentionally not implemented
+- Swap mechanics are currently a transparent preview model; no swap transaction is submitted
 - Responsive layout and keyboard-visible focus states
 
 ## Architecture
@@ -92,6 +94,8 @@ Sepolia RPC and ERC-20 contracts
 ```
 
 The client reads token metadata, balances, and allowances from Sepolia. Approval requests are sent only after an explicit user action, use the exact amount entered in the form, and expose the submitted transaction hash and receipt status. No swap contract is configured or called.
+
+The Phase 7 swap preview uses the live ETH/USDT market price, a documented virtual-liquidity assumption, and a simulated router gas limit to make execution tradeoffs visible before a real AMM or router is introduced.
 
 ## Technology
 
@@ -232,6 +236,7 @@ MVP_REQUIREMENTS.md
 - Wallet and token interactions currently target the Sepolia test network only.
 - USDC and WETH balances/allowances are read from configurable token contracts; approval writes use the configured Permit2 spender by default.
 - No swap contract, blockchain trade, or mainnet interaction is implemented.
+- Swap quote mechanics use a simulated liquidity/fee model and are not an executable DEX quote.
 - The chart starts collecting live data when the page connects; it does not load historical candles yet.
 - Ticker percentages represent change during the current browser session, not Binance's 24-hour change.
 - No order book, limit orders, stop-loss orders, token swaps, or mainnet blockchain interaction is included.
