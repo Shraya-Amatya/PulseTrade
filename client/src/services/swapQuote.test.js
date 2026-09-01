@@ -14,6 +14,7 @@ test('calculates fee, price impact, output, and minimum received', () => {
   assert.ok(quote.priceImpactPercent > 0)
   assert.ok(quote.minimumReceived < quote.amountOut)
   assert.ok(quote.amountOut > 0)
+  assert.ok(quote.postSwapPrice > quote.marketPriceUsd)
 })
 
 test('rejects invalid input and excessive slippage', () => {

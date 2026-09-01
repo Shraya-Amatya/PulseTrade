@@ -67,7 +67,7 @@ function SwapMechanics() {
     <section className="dashboard-panel swap-mechanics" aria-labelledby="swap-mechanics-title">
       <div className="panel-heading">
         <div>
-          <p className="panel-heading__eyebrow">Phase 7 · Preview only</p>
+          <p className="panel-heading__eyebrow">Phase 8 · AMM preview</p>
           <h2 id="swap-mechanics-title">Swap mechanics</h2>
         </div>
         <span className="panel-status">USDC → WETH</span>
@@ -130,7 +130,7 @@ function SwapMechanics() {
           <button className="swap-mechanics__button" type="button" onClick={handleReview} disabled={!quote.ok}>
             Review simulated quote
           </button>
-          <p className="swap-mechanics__note">This preview does not request a wallet signature or submit a transaction.</p>
+          <p className="swap-mechanics__note">This AMM preview does not request a wallet signature or submit a transaction.</p>
         </div>
 
         <div className="swap-breakdown" aria-live="polite">
@@ -140,6 +140,7 @@ function SwapMechanics() {
               <div><span>Price impact</span><strong>{quote.priceImpactPercent.toFixed(2)}%</strong></div>
               <div><span>Pool fee</span><strong>{currencyFormatter.format(quote.fee)} USDC ({quote.feePercent.toFixed(2)}%)</strong></div>
               <div><span>Effective price</span><strong>{currencyFormatter.format(quote.effectivePrice)} / ETH</strong></div>
+              <div><span>Post-swap pool price</span><strong>{currencyFormatter.format(quote.postSwapPrice)} / ETH</strong></div>
             </>
           ) : (
             <p className="swap-breakdown__error" role="alert">{quote.error}</p>
@@ -150,7 +151,7 @@ function SwapMechanics() {
             <strong>{isGasLoading ? 'Loading…' : isGasError ? 'Unavailable' : gasEstimate ? `${currencyFormatter.format(gasEstimate.gasUsd)} (${formatEth(gasEstimate.gasEth)})` : 'Unavailable'}</strong>
           </div>
           <div><span>Deadline</span><strong>{deadline.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</strong></div>
-          <p className="swap-breakdown__note">Gas preview uses a {SWAP_QUOTE_DEFAULTS.gasLimit.toLocaleString()}-unit simulated router estimate and the current Sepolia gas price.</p>
+          <p className="swap-breakdown__note">Quote uses the modeled USDC/ETH pool below. Gas preview uses a {SWAP_QUOTE_DEFAULTS.gasLimit.toLocaleString()}-unit simulated router estimate and the current Sepolia gas price.</p>
           {reviewMessage && <p className="swap-breakdown__success" role="status">{reviewMessage}</p>}
         </div>
       </div>

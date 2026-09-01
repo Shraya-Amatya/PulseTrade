@@ -379,6 +379,26 @@
   }
 }
 
+.pool-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: tokens.$space-4;
+
+  div {
+    display: grid;
+    gap: tokens.$space-1;
+  }
+
+  span {
+    color: tokens.$color-muted;
+    font-size: 0.75rem;
+  }
+
+  strong {
+    font-size: 0.9375rem;
+  }
+}
+
 .demo-badge {
   padding: tokens.$space-2 tokens.$space-3;
   border: 1px solid tokens.$color-border;
@@ -743,5 +763,9 @@ table {
 
   .swap-settings {
     grid-template-columns: 1fr;
+  }
+
+  .pool-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
