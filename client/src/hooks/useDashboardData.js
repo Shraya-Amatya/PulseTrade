@@ -30,7 +30,7 @@ function useDashboardData() {
       })
 
     loadData()
-    const intervalId = window.setInterval(loadData, 1000)
+    const intervalId = window.setInterval(loadData, 5000)
 
     return () => {
       active = false

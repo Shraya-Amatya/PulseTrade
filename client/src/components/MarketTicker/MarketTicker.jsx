@@ -28,7 +28,8 @@ function MarketTicker() {
 function MarketCard({ pair, label }) {
   const price = useMarketPrice(pair)
   const change = useMarketChange(pair)
-  const direction = change < 0 ? 'negative' : 'positive'
+  const displayChange = Math.abs(change) < 0.005 ? 0 : change
+  const direction = displayChange < 0 ? 'negative' : 'positive'
 
   return (
     <article className="market-card">
@@ -37,8 +38,8 @@ function MarketCard({ pair, label }) {
         {price == null ? 'Loading…' : currencyFormatter.format(price)}
       </strong>
       <span className={`market-card__change market-card__change--${direction}`}>
-        {change >= 0 ? '+' : ''}
-        {change.toFixed(2)}%
+        {displayChange >= 0 ? '+' : ''}
+        {displayChange.toFixed(2)}%
       </span>
     </article>
   )

@@ -9,12 +9,19 @@ async function request(path, options = {}) {
     },
   })
 
-  const data = await response.json()
+  const contentType = response.headers.get('content-type') || ''
+  const data = contentType.includes('application/json')
+    ? await response.json()
+    : null
 
   if (!response.ok) {
-    const error = new Error(data.error || `PulseTrade API request failed with status ${response.status}`)
-    error.code = data.code
+    const error = new Error(data?.error || `PulseTrade API request failed with status ${response.status}`)
+    error.code = data?.code
     throw error
+  }
+
+  if (data == null) {
+    throw new Error('PulseTrade API returned an invalid response.')
   }
 
   return data
@@ -33,4 +40,14 @@ export function submitTrade({ pair, side, quantity }) {
     method: 'POST',
     body: JSON.stringify({ pair, side, quantity }),
   })
+}
+
+export function fetchMarketCandles(pair, { interval = '1m', limit = 120, signal } = {}) {
+  const query = new URLSearchParams({
+    pair,
+    interval,
+    limit: String(limit),
+  })
+
+  return request(`/api/market/candles?${query}`, { signal })
 }

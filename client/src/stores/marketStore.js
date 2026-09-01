@@ -119,7 +119,7 @@ function connect() {
 
   socket.addEventListener('open', () => {
     reconnectAttempt = 0
-    setStatus('connected')
+    setStatus('connecting')
   })
 
   socket.addEventListener('message', (event) => {

@@ -7,7 +7,9 @@ const config = require('./config');
 const pool = require('./db/pool');
 const { createPortfolioRouter } = require('./api/portfolioRoutes');
 const { createTradesRouter } = require('./api/tradesRoutes');
+const { createMarketRouter } = require('./api/marketRoutes');
 const MarketHub = require('./market/marketHub');
+const { BinanceRestClient } = require('./market/binanceRestClient');
 const { TradingEngine } = require('./services/tradingEngine');
 
 const app = express();
@@ -30,6 +32,7 @@ app.get('/api/health', (_request, response) => {
 
 const server = http.createServer(app);
 const marketHub = new MarketHub({ server });
+const marketClient = new BinanceRestClient({ baseUrl: config.binanceRestUrl });
 const tradingEngine = new TradingEngine({
   pool,
   priceCache: marketHub.priceCache,
@@ -44,6 +47,10 @@ const tradesRouter = createTradesRouter({ database: pool, tradingEngine });
 app.use('/api/portfolio', portfolioRouter);
 app.use('/api/trades', tradesRouter);
 app.use('/api/trade', tradesRouter);
+app.use('/api/market', createMarketRouter({
+  marketClient,
+  supportedPairs: config.marketPairs,
+}));
 
 app.use((error, request, response, _next) => {
   console.error('Unhandled request error:', {

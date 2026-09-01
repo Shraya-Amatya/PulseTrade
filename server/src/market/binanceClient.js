@@ -39,14 +39,19 @@ class BinanceClient extends EventEmitter {
     pairs = [],
     reconnectBaseMs = 1000,
     reconnectMaxMs = 30000,
+    idleTimeoutMs = 10000,
+    WebSocketImpl = WebSocket,
   }) {
     super();
     this.url = url;
     this.pairs = pairs;
     this.reconnectBaseMs = reconnectBaseMs;
     this.reconnectMaxMs = reconnectMaxMs;
+    this.idleTimeoutMs = idleTimeoutMs;
+    this.WebSocketImpl = WebSocketImpl;
     this.socket = null;
     this.reconnectTimer = null;
+    this.idleTimer = null;
     this.reconnectAttempt = 0;
     this.stopped = true;
   }
@@ -63,7 +68,9 @@ class BinanceClient extends EventEmitter {
   stop() {
     this.stopped = true;
     clearTimeout(this.reconnectTimer);
+    clearTimeout(this.idleTimer);
     this.reconnectTimer = null;
+    this.idleTimer = null;
 
     if (this.socket) {
       this.socket.removeAllListeners();
@@ -78,18 +85,27 @@ class BinanceClient extends EventEmitter {
     }
 
     this.emit('status', { status: 'connecting' });
-    const socket = new WebSocket(this.url);
+    const socket = new this.WebSocketImpl(this.url);
     this.socket = socket;
+    let isReceivingTrades = false;
 
     socket.on('open', () => {
-      this.reconnectAttempt = 0;
-      this.emit('status', { status: 'connected' });
+      this.emit('status', { status: 'waiting' });
+      this.#armIdleTimer(socket);
     });
 
     socket.on('message', (message) => {
       const normalizedEvent = normalizeTradeMessage(message, this.pairs);
 
       if (normalizedEvent) {
+        this.#armIdleTimer(socket);
+
+        if (!isReceivingTrades) {
+          isReceivingTrades = true;
+          this.reconnectAttempt = 0;
+          this.emit('status', { status: 'connected' });
+        }
+
         this.emit('trade', normalizedEvent);
       }
     });
@@ -99,6 +115,9 @@ class BinanceClient extends EventEmitter {
     });
 
     socket.on('close', () => {
+      clearTimeout(this.idleTimer);
+      this.idleTimer = null;
+
       if (this.socket === socket) {
         this.socket = null;
       }
@@ -108,6 +127,22 @@ class BinanceClient extends EventEmitter {
         this.#scheduleReconnect();
       }
     });
+  }
+
+  #armIdleTimer(socket) {
+    clearTimeout(this.idleTimer);
+
+    if (!Number.isFinite(this.idleTimeoutMs) || this.idleTimeoutMs <= 0) {
+      return;
+    }
+
+    this.idleTimer = setTimeout(() => {
+      if (this.stopped || this.socket !== socket) return;
+
+      this.emit('status', { status: 'stale' });
+      socket.terminate();
+    }, this.idleTimeoutMs);
+    this.idleTimer.unref?.();
   }
 
   #scheduleReconnect() {
@@ -126,6 +161,7 @@ class BinanceClient extends EventEmitter {
       this.reconnectTimer = null;
       this.#openSocket();
     }, delay);
+    this.reconnectTimer.unref?.();
   }
 }
 

@@ -6,6 +6,8 @@ function Header({ status }) {
     connected: 'Connected',
     reconnecting: 'Reconnecting',
     disconnected: 'Disconnected',
+    waiting: 'Waiting for prices',
+    stale: 'Market feed stale',
     error: 'Connection error',
     connecting: 'Connecting',
   }[status] || 'Connecting'
@@ -19,7 +21,7 @@ function Header({ status }) {
       <div className="app-header__account">
         <span className="demo-badge">Demo Account</span>
         <span
-          className={`connection-status connection-status--${isConnected ? 'online' : status === 'error' ? 'error' : 'pending'}`}
+          className={`connection-status connection-status--${isConnected ? 'online' : ['error', 'stale'].includes(status) ? 'error' : 'pending'}`}
           role="status"
         >
           <span aria-hidden="true">●</span>

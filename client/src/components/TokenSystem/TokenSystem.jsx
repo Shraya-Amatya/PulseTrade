@@ -232,7 +232,7 @@ function TokenSystem() {
       ) : (
         <>
           <p className="data-note token-system__notice">
-            Testnet-only approval flow. PulseTrade does not execute swaps or real trades.
+            Testnet-only approval flow. Approvals can be used by the separate Uniswap v3 testnet panel below.
           </p>
           <div className="token-system__grid">
             {TOKEN_CONTRACTS.map((token) => (

@@ -40,14 +40,25 @@ function WalletConnection() {
   if (!isConnected || !address) {
     return (
       <div className="wallet-connection">
-        <button
-          className="wallet-connection__button"
-          type="button"
-          onClick={() => connector && connect({ connector })}
-          disabled={!connector || walletAvailable === false || isConnecting}
-        >
-          {isConnecting ? 'Connecting…' : walletAvailable === false ? 'Install MetaMask' : 'Connect wallet'}
-        </button>
+        {walletAvailable === false ? (
+          <a
+            className="wallet-connection__button"
+            href="https://metamask.io/download/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Install MetaMask
+          </a>
+        ) : (
+          <button
+            className="wallet-connection__button"
+            type="button"
+            onClick={() => connector && connect({ connector })}
+            disabled={!connector || isConnecting}
+          >
+            {isConnecting ? 'Connecting…' : 'Connect wallet'}
+          </button>
+        )}
         {connectError && (
           <span className="wallet-connection__error" role="alert">
             {getErrorMessage(connectError, 'Unable to connect your wallet.')}
@@ -88,7 +99,7 @@ function WalletConnection() {
           {getErrorMessage(switchError, `Switch to ${TARGET_CHAIN.name} in your wallet to continue.`)}
         </span>
       )}
-      <span className="wallet-connection__hint">Simulated trading; on-chain writes are limited to testnet token approvals.</span>
+      <span className="wallet-connection__hint">Simulated trading; optional approvals and swaps use Sepolia testnet tokens only.</span>
     </div>
   )
 }

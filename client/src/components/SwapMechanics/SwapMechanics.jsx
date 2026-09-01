@@ -60,7 +60,7 @@ function SwapMechanics() {
 
   const handleReview = () => {
     if (!quote.ok) return
-    setReviewMessage('Quote validated. Swap execution is intentionally disabled until the real DEX phase.')
+    setReviewMessage('Quote validated. Use the Uniswap v3 panel below for a separate on-chain testnet quote.')
   }
 
   return (

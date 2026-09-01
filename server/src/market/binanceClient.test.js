@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { normalizeTradeMessage } = require('./binanceClient');
+const { EventEmitter } = require('node:events');
+const { BinanceClient, normalizeTradeMessage } = require('./binanceClient');
 
 test('normalizes a Binance combined trade event', () => {
   const rawMessage = JSON.stringify({
@@ -41,4 +42,43 @@ test('ignores malformed and unsupported Binance events', () => {
     ),
     null,
   );
+});
+
+test('marks a silent upstream connection stale and reconnects it', async () => {
+  class FakeWebSocket extends EventEmitter {
+    constructor() {
+      super();
+      FakeWebSocket.instance = this;
+    }
+
+    close() {
+      this.emit('close');
+    }
+
+    terminate() {
+      this.terminated = true;
+      this.emit('close');
+    }
+  }
+
+  const client = new BinanceClient({
+    url: 'wss://market.example',
+    pairs: ['BTCUSDT'],
+    idleTimeoutMs: 20,
+    reconnectBaseMs: 1000,
+    WebSocketImpl: FakeWebSocket,
+  });
+  const statuses = [];
+  client.on('status', ({ status }) => statuses.push(status));
+
+  client.connect();
+  FakeWebSocket.instance.emit('open');
+  await new Promise((resolve) => setTimeout(resolve, 60));
+
+  assert.equal(FakeWebSocket.instance.terminated, true);
+  assert.ok(statuses.includes('waiting'));
+  assert.ok(statuses.includes('stale'));
+  assert.ok(statuses.includes('reconnecting'));
+
+  client.stop();
 });

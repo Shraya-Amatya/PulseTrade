@@ -9,7 +9,7 @@ const marketPairs = (process.env.MARKET_PAIRS || 'BTCUSDT,ETHUSDT,SOLUSDT')
   .filter(Boolean);
 
 const defaultBinanceStreamUrl =
-  `wss://stream.binance.com:9443/stream?streams=${marketPairs
+  `wss://data-stream.binance.vision/stream?streams=${marketPairs
     .map((pair) => `${pair.toLowerCase()}@trade`)
     .join('/')}`;
 
@@ -25,6 +25,8 @@ module.exports = {
   nodeEnv: process.env.NODE_ENV || 'development',
   marketPairs,
   binanceStreamUrl: process.env.BINANCE_STREAM_URL || defaultBinanceStreamUrl,
+  binanceRestUrl: process.env.BINANCE_REST_URL || 'https://data-api.binance.vision',
+  marketStreamIdleTimeoutMs: Number(process.env.MARKET_STREAM_IDLE_TIMEOUT_MS || 10000),
   websocketPath: process.env.WEBSOCKET_PATH || '/',
   evmRpcUrl: process.env.EVM_RPC_URL || '',
   evmWsUrl: process.env.EVM_WS_URL || '',
