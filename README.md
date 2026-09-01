@@ -328,6 +328,8 @@ Railway (PostgreSQL)
 5. Expose the server and verify `/api/health` returns `{ "status": "ok" }`.
 6. Run the database migration as a one-off release command before serving traffic, and enable Railway PostgreSQL backups for production data.
 
+The server also includes [server/Dockerfile](./server/Dockerfile) for a container-based Railway deployment.
+
 ### Vercel
 
 1. Import the repository as a Vercel project with `client` as the root directory.
