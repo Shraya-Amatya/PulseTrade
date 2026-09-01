@@ -290,6 +290,7 @@ server/
     index.js
 docker-compose.yml
 MVP_REQUIREMENTS.md
+PERFORMANCE.md
 ```
 
 ## Known limitations
