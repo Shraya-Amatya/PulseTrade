@@ -2,6 +2,7 @@ const { WebSocketServer } = require('ws');
 const config = require('../config');
 const { BinanceClient } = require('./binanceClient');
 const PriceCache = require('./priceCache');
+const EvmClient = require('../chain/evmClient');
 
 class MarketHub {
   constructor({
@@ -12,12 +13,18 @@ class MarketHub {
       pairs: config.marketPairs,
     }),
     priceCache = new PriceCache({ pairs: config.marketPairs }),
+    evmClient = new EvmClient({
+      rpcUrl: config.evmRpcUrl,
+      wsUrl: config.evmWsUrl,
+      poolAddresses: config.evmPoolAddresses,
+    }),
   }) {
     this.server = server;
     this.websocketPath = websocketPath;
     this.websocketPaths = new Set([websocketPath, '/', '/ws']);
     this.binanceClient = binanceClient;
     this.priceCache = priceCache;
+    this.evmClient = evmClient;
     this.clients = new Set();
     this.connectionStatus = 'disconnected';
     this.webSocketServer = new WebSocketServer({ noServer: true });
@@ -65,14 +72,23 @@ class MarketHub {
       this.broadcast({ type: 'error', message: 'Upstream market data error' });
       console.error('Binance market-data error:', error.message);
     });
+
+    this.evmClient.on('event', (event) => this.broadcast(event));
+    this.evmClient.on('status', ({ status }) => this.broadcast({ type: 'chain_connection', status, network: 'sepolia' }));
+    this.evmClient.on('error', (error) => {
+      this.broadcast({ type: 'chain_error', network: 'sepolia', message: 'Blockchain event stream error' });
+      console.error('EVM event-stream error:', error.message);
+    });
   }
 
   start() {
     this.binanceClient.connect();
+    this.evmClient.start();
   }
 
   stop() {
     this.binanceClient.stop();
+    this.evmClient.stop();
     for (const client of this.clients) {
       client.close();
     }

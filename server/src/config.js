@@ -13,6 +13,11 @@ const defaultBinanceStreamUrl =
     .map((pair) => `${pair.toLowerCase()}@trade`)
     .join('/')}`;
 
+const evmPoolAddresses = (process.env.EVM_POOL_ADDRESSES || '')
+  .split(',')
+  .map((address) => address.trim())
+  .filter(Boolean);
+
 module.exports = {
   port: Number(process.env.PORT || 3000),
   clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
@@ -21,4 +26,7 @@ module.exports = {
   marketPairs,
   binanceStreamUrl: process.env.BINANCE_STREAM_URL || defaultBinanceStreamUrl,
   websocketPath: process.env.WEBSOCKET_PATH || '/',
+  evmRpcUrl: process.env.EVM_RPC_URL || '',
+  evmWsUrl: process.env.EVM_WS_URL || '',
+  evmPoolAddresses,
 };
