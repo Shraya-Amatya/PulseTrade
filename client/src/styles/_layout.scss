@@ -98,6 +98,135 @@
   }
 }
 
+.token-system {
+  &__notice {
+    margin-top: -#{tokens.$space-2};
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: tokens.$space-4;
+    margin-top: tokens.$space-4;
+  }
+}
+
+.token-card {
+  display: grid;
+  gap: tokens.$space-3;
+  padding: tokens.$space-4;
+  border: 1px solid tokens.$color-border;
+  border-radius: tokens.$radius-md;
+  background: tokens.$color-background;
+
+  &__heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: tokens.$space-3;
+
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h3 {
+      font-size: 1rem;
+
+      span {
+        color: tokens.$color-muted;
+        font-size: 0.8125rem;
+        font-weight: 600;
+      }
+    }
+
+    a {
+      color: tokens.$color-accent;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-decoration: none;
+    }
+  }
+
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: tokens.$space-3;
+
+    div {
+      display: grid;
+      gap: tokens.$space-1;
+    }
+
+    span,
+    strong {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    span {
+      color: tokens.$color-muted;
+      font-size: 0.75rem;
+    }
+
+    strong {
+      font-size: 0.875rem;
+    }
+  }
+
+  &__approval {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: tokens.$space-3;
+  }
+
+  &__button {
+    min-height: 2.75rem;
+    padding: 0 tokens.$space-3;
+    border: 0;
+    border-radius: tokens.$radius-sm;
+    color: #ffffff;
+    background: tokens.$color-accent;
+    cursor: pointer;
+    font-size: 0.8125rem;
+    font-weight: 700;
+
+    &:disabled {
+      background: tokens.$color-muted;
+      cursor: not-allowed;
+    }
+  }
+
+  &__help,
+  &__muted,
+  &__status,
+  &__error {
+    margin: 0;
+    font-size: 0.75rem;
+    line-height: 1.45;
+  }
+
+  &__help,
+  &__muted {
+    color: tokens.$color-muted;
+  }
+
+  &__status {
+    color: tokens.$color-positive;
+
+    a {
+      color: inherit;
+      font-weight: 700;
+    }
+  }
+
+  &__error {
+    color: tokens.$color-negative;
+  }
+}
+
 .demo-badge {
   padding: tokens.$space-2 tokens.$space-3;
   border: 1px solid tokens.$color-border;
@@ -422,6 +551,10 @@ table {
   .trading-workspace {
     grid-template-columns: 1fr;
   }
+
+  .token-system__grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 600px) {
@@ -437,7 +570,12 @@ table {
   }
 
   .market-ticker,
-  .portfolio-summary__grid {
+  .portfolio-summary__grid,
+  .token-card__stats {
+    grid-template-columns: 1fr;
+  }
+
+  .token-card__approval {
     grid-template-columns: 1fr;
   }
 }
